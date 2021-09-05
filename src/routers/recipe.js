@@ -63,49 +63,44 @@ router.get('/recipes/me', auth, async (req, res) => {
 })
 
 // Get all recipes with ingredients
-router.get('/rec', async (req, res) => {
+router.get('/recipes', async (req, res) => {
     const { page = 1, limit = 10 } = req.query
-    const recipes = await Recipe.find({})
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .sort('-createdAt')
-        .populate('ingredients')
-        .exec()
 
-    console.log(recipes[0], recipes[0].ingredients)
+    try {
+        const recipes = await Recipe.aggregate([
+            {
+                $lookup: {
+                    from: 'ingredients',
+                    localField: "_id",
+                    foreignField: "recipe",
+                    as: "ingredients"
+                }
+            },
+            {
+                $skip: (page - 1) * limit
+            },
+            {
+                $limit: limit
+            },
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            }
+        ])
 
-    // await recipes
-    //     .populate('ingredients')
-    //     .exec()
-    // await recipes.populate('ingredients').execPopulate()
-    const recipesToReturn = []
-    recipes.forEach(el => recipesToReturn.push(el))
-    if (!recipes) {
-        return res.status(404).send()
+        if (!recipes.length) {
+            return res.status(404).send("Recipes not found")
+        }
+
+        res.send(recipes)
+    } catch (e) {
+        return res.status(500).send(e)
     }
-
-    res.send(recipes)
-
-
-    // const _id = '613312c62983f08a6cd43b50'
-
-    // try {
-    //     const recipes = await Recipe.findById(_id)
-    //     await recipes.populate('ingredients').execPopulate()
-
-    //     // await recipes.populate('ingredients').execPopulate()
-
-    //     if (!recipes) {
-    //         return res.status(404).send()
-    //     }
-
-    //     res.send({ recipes, "k": recipes.ingredients })
-    // } catch (e) {
-    //     res.status(500).send()
-    // }
 })
 
-// Get all recipes
+
+// Get all recipes ALTERNATIVE
 router.get('/recipes', async (req, res) => {
     const { page = 1, limit = 10 } = req.query
 
@@ -114,8 +109,6 @@ router.get('/recipes', async (req, res) => {
             .limit(limit * 1)
             .skip((page - 1) * limit)
             .sort('-createdAt')
-
-        // await recipes.populate('ingredients').execPopulate()
 
         if (!recipes) {
             return res.status(404).send()
