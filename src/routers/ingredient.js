@@ -16,47 +16,16 @@ router.get('/recipes/:id/ingredients', auth, async (req, res) => {
     } catch (e) {
         res.status(400).send(e)
     }
-
-
-})
-
-// Add one ingredient to my recipe
-router.post('/recipes/:id/addOne', auth, async (req, res) => {
-    const name = req.body.name
-    const _id = req.params.id
-
-    const ingredientCheck = await Ingredient.exists({ name, recipe: _id })
-    const recipeCheck = await Recipe.exists({ _id, author: req.user._id })
-
-    if (!recipeCheck) {
-        return res.status(401).send({ error: 'You can only add ingredients to your recipes!' })
-    }
-
-    if (ingredientCheck) {
-        return res.status(409).send({ error: 'This ingredient is already listed for this recipe!' })
-    }
-
-    const ingredient = new Ingredient({
-        ...req.body,
-        recipe: _id
-    })
-
-    try {
-        await ingredient.save()
-        res.status(201).send(ingredient)
-    } catch (e) {
-        res.status(400).send(e)
-    }
 })
 
 // Add multiple ingredients to my recipe
-router.post('/recipes/:id/addMany', auth, async (req, res) => {
+router.post('/ingredients/:id/add', auth, async (req, res) => {
     const _id = req.params.id
     let newIngredients = req.body
-    newIngredients = newIngredients.map(el => el.toLowerCase())
     if (!newIngredients.every(el => typeof el === 'string')) {
         return res.status(400).send({ error: 'All new ingredients must be strings!' })
     }
+    newIngredients = newIngredients.map(el => el.toLowerCase())
     const existingIngredients = []
     const newIngredientsObjects = []
     const recipe = await Recipe.findById(_id)
@@ -76,9 +45,10 @@ router.post('/recipes/:id/addMany', auth, async (req, res) => {
 })
 
 // Find top 5 most used ingredients
-router.get('/ingredients/topFive', auth, async (req, res) => {
+router.get('/ingredients/top', auth, async (req, res) => {
+    const { n = 5 } = req.query
     try {
-        const topFiveIngredients = await Ingredient.aggregate([
+        const topIngredients = await Ingredient.aggregate([
             {
                 "$group": {
                     "_id": "$name",
@@ -92,20 +62,17 @@ router.get('/ingredients/topFive', auth, async (req, res) => {
                     "count": -1
                 }
             },
-            { $limit: 5 }
+            { $limit: parseInt(n) }
         ])
 
-        if (!topFiveIngredients.length) {
+        if (!topIngredients.length) {
             return res.status(404).send()
         }
 
-        res.send(topFiveIngredients)
+        res.send(topIngredients)
     } catch (e) {
         res.status(500).send()
     }
-
-
-
 })
 
 
