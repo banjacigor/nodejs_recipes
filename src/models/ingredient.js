@@ -15,6 +15,17 @@ const ingredientSchema = new mongoose.Schema({
     }
 })
 
+ingredientSchema.methods.toJSON = function () {
+    const ingredient = this
+    const ingredientObject = ingredient.toObject()
+
+    delete ingredientObject._id
+    delete ingredientObject.recipe
+    delete ingredientObject.__v
+
+    return ingredientObject
+}
+
 const Ingredient = mongoose.model('Ingredient', ingredientSchema)
 
 module.exports = Ingredient

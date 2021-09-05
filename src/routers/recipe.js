@@ -48,7 +48,6 @@ router.get('/recipes/me', auth, async (req, res) => {
         // const recipes = await Recipe.find({ author: req.user._id })
         // res.send(recipes)
 
-
         await req.user.populate({
             path: 'recipes',
             options: {
@@ -63,6 +62,49 @@ router.get('/recipes/me', auth, async (req, res) => {
     }
 })
 
+// Get all recipes with ingredients
+router.get('/rec', async (req, res) => {
+    const { page = 1, limit = 10 } = req.query
+    const recipes = await Recipe.find({})
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .sort('-createdAt')
+        .populate('ingredients')
+        .exec()
+
+    console.log(recipes[0], recipes[0].ingredients)
+
+    // await recipes
+    //     .populate('ingredients')
+    //     .exec()
+    // await recipes.populate('ingredients').execPopulate()
+    const recipesToReturn = []
+    recipes.forEach(el => recipesToReturn.push(el))
+    if (!recipes) {
+        return res.status(404).send()
+    }
+
+    res.send(recipes)
+
+
+    // const _id = '613312c62983f08a6cd43b50'
+
+    // try {
+    //     const recipes = await Recipe.findById(_id)
+    //     await recipes.populate('ingredients').execPopulate()
+
+    //     // await recipes.populate('ingredients').execPopulate()
+
+    //     if (!recipes) {
+    //         return res.status(404).send()
+    //     }
+
+    //     res.send({ recipes, "k": recipes.ingredients })
+    // } catch (e) {
+    //     res.status(500).send()
+    // }
+})
+
 // Get all recipes
 router.get('/recipes', async (req, res) => {
     const { page = 1, limit = 10 } = req.query
@@ -73,16 +115,16 @@ router.get('/recipes', async (req, res) => {
             .skip((page - 1) * limit)
             .sort('-createdAt')
 
+        // await recipes.populate('ingredients').execPopulate()
+
         if (!recipes) {
             return res.status(404).send()
         }
 
-        res.send(recipes)
+        res.send({ recipes, "ingredients": recipes.ingredients })
     } catch (e) {
         res.status(500).send()
     }
-
-
 })
 
 // Get single recipe

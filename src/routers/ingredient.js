@@ -75,6 +75,34 @@ router.post('/recipe/:id/addMany', auth, async (req, res) => {
     }
 })
 
+// Find top 5 most used ingredients
+router.get('/ingredients/topFive', auth, async (req, res) => {
+    Ingredient.aggregate([
+        {
+            "$group": {
+                "_id": "$name",
+                "count": {
+                    "$sum": 1
+                }
+            }
+        },
+        {
+            "$sort": {
+                "count": -1
+            }
+        },
+        { $limit: 5 }
+    ], function (err, resolve) {
+        if (err) {
+            res.status(400).send(err)
+        }
+        const topFive = []
+        resolve.forEach(el => topFive.push(el._id))
+        res.status(200).send(topFive)
+    })
+
+})
+
 
 module.exports = router
 
