@@ -77,6 +77,7 @@ router.post('/recipe/:id/addMany', auth, async (req, res) => {
 
 // Find top 5 most used ingredients
 router.get('/ingredients/topFive', auth, async (req, res) => {
+    console.log('test')
     Ingredient.aggregate([
         {
             "$group": {
