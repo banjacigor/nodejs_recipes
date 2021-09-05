@@ -5,7 +5,7 @@ const Ingredient = require('../models/ingredient')
 const Recipe = require('../models/recipe')
 
 // List ingredients for a recipe
-router.get('/recipe/:id/ingredients', auth, async (req, res) => {
+router.get('/recipes/:id/ingredients', auth, async (req, res) => {
     const _id = req.params.id
 
     try {
@@ -21,7 +21,7 @@ router.get('/recipe/:id/ingredients', auth, async (req, res) => {
 })
 
 // Add one ingredient to my recipe
-router.post('/recipe/:id/addOne', auth, async (req, res) => {
+router.post('/recipes/:id/addOne', auth, async (req, res) => {
     const name = req.body.name
     const _id = req.params.id
 
@@ -50,12 +50,12 @@ router.post('/recipe/:id/addOne', auth, async (req, res) => {
 })
 
 // Add multiple ingredients to my recipe
-router.post('/recipe/:id/addMany', auth, async (req, res) => {
+router.post('/recipes/:id/addMany', auth, async (req, res) => {
     const _id = req.params.id
     let newIngredients = req.body
     newIngredients = newIngredients.map(el => el.toLowerCase())
     if (!newIngredients.every(el => typeof el === 'string')) {
-        return res.status(409).send({ error: 'All new ingredients must be strings!' })
+        return res.status(400).send({ error: 'All new ingredients must be strings!' })
     }
     const existingIngredients = []
     const newIngredientsObjects = []
@@ -77,30 +77,34 @@ router.post('/recipe/:id/addMany', auth, async (req, res) => {
 
 // Find top 5 most used ingredients
 router.get('/ingredients/topFive', auth, async (req, res) => {
-    console.log('test')
-    Ingredient.aggregate([
-        {
-            "$group": {
-                "_id": "$name",
-                "count": {
-                    "$sum": 1
+    try {
+        const topFiveIngredients = await Ingredient.aggregate([
+            {
+                "$group": {
+                    "_id": "$name",
+                    "count": {
+                        "$sum": 1
+                    }
                 }
-            }
-        },
-        {
-            "$sort": {
-                "count": -1
-            }
-        },
-        { $limit: 5 }
-    ], function (err, resolve) {
-        if (err) {
-            res.status(400).send(err)
+            },
+            {
+                "$sort": {
+                    "count": -1
+                }
+            },
+            { $limit: 5 }
+        ])
+
+        if (!topFiveIngredients.length) {
+            return res.status(404).send()
         }
-        const topFive = []
-        resolve.forEach(el => topFive.push(el._id))
-        res.status(200).send(topFive)
-    })
+
+        res.send(topFiveIngredients)
+    } catch (e) {
+        res.status(500).send()
+    }
+
+
 
 })
 
