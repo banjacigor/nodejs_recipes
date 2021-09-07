@@ -114,7 +114,8 @@ userSchema.pre('save', async function (next) {
 // Delete user recipes when user is removed
 userSchema.pre('remove', async function (next) {
     const user = this
-    await Recipe.deleteMany({ author: user._id })
+    const recipes = await Recipe.find({ author: user._id })
+    recipes.forEach((el) => el.remove())
     next()
 })
 
