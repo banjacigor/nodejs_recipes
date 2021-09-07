@@ -2,6 +2,7 @@ const express = require('express')
 const Recipe = require('../models/recipe')
 const Ingredient = require('../models/ingredient')
 const auth = require('../middleware/auth')
+const { findById } = require('../models/ingredient')
 const router = new express.Router()
 
 // Create recipe
@@ -62,7 +63,7 @@ router.get('/recipes/me', auth, async (req, res) => {
     }
 })
 
-// Get all recipes with ingredients
+// Get all recipes with their ingredients
 router.get('/recipes', async (req, res) => {
     const { page = 1, limit = 10 } = req.query
 
@@ -99,27 +100,6 @@ router.get('/recipes', async (req, res) => {
     }
 })
 
-
-// Get all recipes ALTERNATIVE
-router.get('/recipes', async (req, res) => {
-    const { page = 1, limit = 10 } = req.query
-
-    try {
-        const recipes = await Recipe.find({})
-            .limit(limit * 1)
-            .skip((page - 1) * limit)
-            .sort('-createdAt')
-
-        if (!recipes) {
-            return res.status(404).send()
-        }
-
-        res.send({ recipes, "ingredients": recipes.ingredients })
-    } catch (e) {
-        res.status(500).send()
-    }
-})
-
 // Get single recipe
 router.get('/recipes/:id', auth, async (req, res) => {
     const _id = req.params.id
@@ -133,6 +113,42 @@ router.get('/recipes/:id', auth, async (req, res) => {
         res.send(recipe)
     } catch (e) {
         res.status(500).send()
+    }
+})
+
+// Get recipe(s) with minimum number of ingredients
+router.get('/recipesminimum', async (req, res) => {
+    try {
+        const ingr = await Ingredient.aggregate([
+            {
+                $group: {
+                    "_id": "$recipe",
+                    "count": {
+                        "$sum": 1
+                    }
+                }
+            },
+            {
+                "$sort": {
+                    "count": 1
+                }
+            },
+            {
+                $limit: 1
+            }
+        ])
+
+        const recipeID = ingr[0]._id
+
+        const recipe = await Recipe.findById(recipeID)
+
+        if (!recipe) {
+            return res.status(404).send()
+        }
+
+        res.send(recipe)
+    } catch (e) {
+        res.status(500).send(e)
     }
 })
 
@@ -168,11 +184,14 @@ router.delete('/recipes/:id', auth, async (req, res) => {
     const _id = req.params.id
 
     try {
-        const recipe = await Recipe.findOneAndDelete({ _id, author: req.user._id })
+        const recipe = await Recipe.findById(_id)
+        console.log(recipe)
 
         if (!recipe) {
             return res.status(404).send()
         }
+
+        await recipe.remove()
 
         res.send(recipe)
     } catch (e) {
