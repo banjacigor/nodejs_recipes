@@ -118,6 +118,12 @@ router.get('/recipes/:id', auth, async (req, res) => {
 
 // Get recipe(s) with minimum number of ingredients
 router.get('/recipesminimum', async (req, res) => {
+    const { type = "max" } = req.query
+    if (!["max", "min"].includes(type)) {
+        return res.status(404).send("Type must be min or max")
+    }
+    sort = type === "max" ? -1 : 1
+
     try {
         const ingr = await Ingredient.aggregate([
             {
@@ -130,7 +136,7 @@ router.get('/recipesminimum', async (req, res) => {
             },
             {
                 "$sort": {
-                    "count": 1
+                    "count": sort
                 }
             },
             {
@@ -140,7 +146,19 @@ router.get('/recipesminimum', async (req, res) => {
 
         const recipeID = ingr[0]._id
 
-        const recipe = await Recipe.findById(recipeID)
+        const recipe = await Recipe.aggregate([
+            {
+                $match: { _id: recipeID }
+            },
+            {
+                $lookup: {
+                    from: 'ingredients',
+                    localField: "_id",
+                    foreignField: "recipe",
+                    as: "ingredients"
+                }
+            }
+        ])
 
         if (!recipe) {
             return res.status(404).send()
