@@ -116,7 +116,7 @@ router.get('/recipes/:id', auth, async (req, res) => {
     }
 })
 
-// Get recipe(s) with minimum number of ingredients
+// Get recipe(s) with minimum or maximum number of ingredients
 router.get('/recipesminimum', async (req, res) => {
     const { type = "max" } = req.query
     if (!["max", "min"].includes(type)) {

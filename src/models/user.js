@@ -48,6 +48,9 @@ const userSchema = mongoose.Schema({
             }
         }
     },
+    title: {
+        type: String
+    },
     tokens: [{
         token: {
             type: String,

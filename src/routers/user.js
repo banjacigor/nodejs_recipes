@@ -2,10 +2,20 @@ const express = require('express')
 const User = require('../models/user')
 const auth = require('../middleware/auth')
 const router = new express.Router()
+const clearbitFunction = require('../utils/clearbit')
 
 // Create user (sign up)
 router.post('/users', async (req, res) => {
-    const user = new User(req.body)
+    title = await clearbitFunction(req.body.email)
+
+    const user = new User({
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        age: req.body.age,
+        email: req.body.email,
+        password: req.body.password,
+        title: title
+    })
 
     try {
         await user.save()
