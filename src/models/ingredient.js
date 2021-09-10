@@ -15,6 +15,8 @@ const ingredientSchema = new mongoose.Schema({
     }
 })
 
+ingredientSchema.index({ '$**': 'text' })
+
 ingredientSchema.methods.toJSON = function () {
     const ingredient = this
     const ingredientObject = ingredient.toObject()

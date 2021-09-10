@@ -197,13 +197,90 @@ router.patch('/recipe/:id', auth, async (req, res) => {
     }
 })
 
+// Search recipes
+router.get('/recipessearch', auth, async (req, res) => {
+    const searchText = req.body.text
+
+    if (!searchText) {
+        return res.status(400).send('Please enter a search term.')
+    } else {
+        try {
+            let recipes = await Recipe.aggregate([
+                {
+                    $match: {
+                        $text: {
+                            $search: searchText
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 1
+                    }
+                }
+            ])
+            recipes = recipes.map(el => el._id)
+
+            let recipesWithIngredient = await Ingredient.aggregate([
+                {
+                    $match: {
+                        $text: {
+                            $search: searchText
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        recipe: 1
+                    }
+                }
+            ])
+            recipesWithIngredient = recipesWithIngredient.map(el => el.recipe)
+
+            if (recipes.length !== 0 && recipesWithIngredient.length !== 0) {
+
+                recipesWithIngredient.forEach((el) => {
+                    if (!recipes.map(String).includes(String(el))) {
+                        recipes.push(el)
+                    }
+                })
+            } else if (recipesWithIngredient.length !== 0) {
+                recipes = recipesWithIngredient
+            } else if (recipes.length === 0 && recipesWithIngredient.length === 0) {
+                return res.status(404).send("Your search didn't find any match.")
+            }
+
+            const searchResult = await Recipe.aggregate([
+                {
+                    $match: {
+                        _id: {
+                            "$in": recipes
+                        }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'ingredients',
+                        localField: "_id",
+                        foreignField: "recipe",
+                        as: "ingredients"
+                    }
+                }
+            ])
+            return res.status(200).send(searchResult)
+        } catch (e) {
+            res.status(500).send()
+        }
+    }
+})
+
 // Delete recipe
 router.delete('/recipes/:id', auth, async (req, res) => {
     const _id = req.params.id
 
     try {
         const recipe = await Recipe.findById(_id)
-        console.log(recipe)
 
         if (!recipe) {
             return res.status(404).send()
