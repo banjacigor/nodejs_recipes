@@ -20,6 +20,8 @@ const recipeSchema = mongoose.Schema({
     timestamps: true
 })
 
+recipeSchema.index({ '$**': 'text' })
+
 recipeSchema.virtual('ingredients', {
     ref: 'Ingredient',
     localField: '_id',
