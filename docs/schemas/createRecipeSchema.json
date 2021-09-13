@@ -1,0 +1,5 @@
+{
+    "title": "Recipe name",
+    "instructions": "Instructions for the recipe",
+	"ingredients": ["ingredient1", "ingredient2", "ingredient3"]
+}

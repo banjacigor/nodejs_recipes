@@ -1,0 +1,7 @@
+{
+    "firstName": "User's first name",
+    "lastName": "User's last name",
+    "email": "User's email",
+    "age": 33,
+    "password": "User's password"
+}
