@@ -3,6 +3,7 @@ const Recipe = require('../models/recipe')
 const Ingredient = require('../models/ingredient')
 const auth = require('../middleware/auth')
 const { findById } = require('../models/ingredient')
+const { isValidObjectId } = require('mongoose')
 const router = new express.Router()
 
 // Create recipe
@@ -63,7 +64,7 @@ router.get('/recipes/me', auth, async (req, res) => {
     }
 })
 
-// Get all recipes with their ingredients
+// Get all recipes
 router.get('/recipes', async (req, res) => {
     const { page = 1, limit = 10 } = req.query
 
@@ -103,8 +104,11 @@ router.get('/recipes', async (req, res) => {
 // Get single recipe
 router.get('/recipes/:id', auth, async (req, res) => {
     const _id = req.params.id
+    console.log(_id)
     try {
+
         const recipe = await Recipe.findOne({ _id, author: req.user._id })
+        await recipe.populate('ingredients').execPopulate()
 
         if (!recipe) {
             return res.status(404).send()
@@ -117,7 +121,7 @@ router.get('/recipes/:id', auth, async (req, res) => {
 })
 
 // Get recipe(s) with minimum or maximum number of ingredients
-router.get('/recipesminimum', async (req, res) => {
+router.get('/recipes/ingredients/minmax', async (req, res) => {
     const { type = "max" } = req.query
     if (!["max", "min"].includes(type)) {
         return res.status(404).send("Type must be min or max")
@@ -198,7 +202,7 @@ router.patch('/recipe/:id', auth, async (req, res) => {
 })
 
 // Search recipes
-router.get('/recipessearch', auth, async (req, res) => {
+router.get('/recipes/ingredients/search', auth, async (req, res) => {
     const searchText = req.body.text
 
     if (!searchText) {
