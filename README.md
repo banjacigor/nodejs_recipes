@@ -16,16 +16,16 @@ Here's an API overview:
 | Logout user | `POST` | `/users/logout` | - |
 | Logout user (all sessions) | `POST` | `/users/logoutAll` | - |
 | Get user's profile | `GET` | `/users/me` | - |
-| Update user's profile | `PATCH` | `/users/me` | [schema](/docs/schemas/userSchema.json) |
+| Update user's profile | `PATCH` | `/users/me` | [schema](/docs/schemas/createUserSchema.json) |
 | Delete user | `DELETE` | `/users/me` | - |
 | Create recipe | `POST` | `/recipes` | [schema](/docs/schemas/createRecipeSchema.json) |
 | Get user's recipes | `GET` | `/users/me?sortBy=createdAt_desc&limit=1&skip=1` | - |
 | Get all recipes | `GET` | `/recipes/me?sortBy=createdAt_desc&limit=1&skip=1` | - |
 | Get recipe by ID | `GET` | `/recipes/<id>` | - |
 | Get recipe with max or min number of ingredients | `GET` | `/recipes/ingredients/minmax?type=<search_type>` | - |
-| Update recipe | `PATCH` | `/recipe/<id>` | [schema](/docs/updateRecipeSchema.json) |
-| Search recipe | `POST` | `/recipes/ingredients/search` | [schema](/docs/searchRecipesIngredientsSchema.json) |
+| Update recipe | `PATCH` | `/recipe/<id>` | [schema](/docs/schemas/updateRecipeSchema.json) |
+| Search recipe | `POST` | `/recipes/ingredients/search` | [schema](/docs/schemas/searchRecipesIngredientsSchema.json) |
 | Delete recipe | `DELETE` | `/recipes/<id>` | - |
-| Get recipe's ingredients | `Get` | `/recipes/<id>/ingredients` | - |
-| Add ingredients to recipe | `POST` | `/ingredients/<id>/add` | [schema](/docs/userSchema.json) |
+| Get recipe's ingredients | `GET` | `/recipes/<id>/ingredients` | - |
+| Add ingredients to recipe | `POST` | `/ingredients/<id>/add` | [schema](/docs/schemas/addIngredientsSchema.json) |
 | Find most used ingredients | `GET` | `/ingredients/top?n=<ingredient_number>` | - |
